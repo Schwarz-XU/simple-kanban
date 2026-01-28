@@ -1,0 +1,35 @@
+# --- Python / uv ---
+.venv/
+__pycache__/
+*.py[cod]
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# uv
+.uv/
+
+# --- Local app data (SENSITIVE) ---
+kanban.db
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Logs / runtime ---
+logs/
+*.log
+nohup.out
+
+# --- Environment / secrets ---
+.env
+.env.*
+*.pem
+*.key
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/

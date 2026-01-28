@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kanban Bob</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Kanban Bob</h1>
+        <div class="sub">Local board • SQLite-backed • drag & drop</div>
+      </div>
+      <div class="actions">
+        <div class="filters" id="filters">
+          <div class="filter-group">
+            <span class="filter-label">Show:</span>
+            <button class="chip active" data-status-filter="todo" type="button">Todo</button>
+            <button class="chip active" data-status-filter="doing" type="button">Doing</button>
+            <button class="chip active" data-status-filter="done" type="button">Done</button>
+          </div>
+          <div class="filter-group">
+            <button id="btnTagFilter" class="chip" type="button">Tags ▾</button>
+            <button id="btnClearFilters" class="chip" type="button">Clear</button>
+            <div id="tagDropdown" class="dropdown" hidden>
+              <div class="dropdown-title">Filter by tags (any)</div>
+              <div id="tagOptions" class="dropdown-body"></div>
+            </div>
+          </div>
+        </div>
+
+        <select id="boardSelect" aria-label="Board"></select>
+        <button id="btnNewBoard">+ Board</button>
+        <button id="btnAdd" class="primary">+ Task</button>
+        <button id="btnRefresh">Refresh</button>
+      </div>
+    </header>
+
+    <main class="board" id="board">
+      {% for c in columns %}
+      <section class="column" data-status="{{ c }}">
+        <div class="column-header">
+          <div class="column-title">{{ c|capitalize }}</div>
+          <div class="column-count" id="count-{{ c }}">0</div>
+        </div>
+        <div class="dropzone" data-status="{{ c }}"></div>
+      </section>
+      {% endfor %}
+    </main>
+
+    <template id="taskTemplate">
+      <div class="task" draggable="true">
+        <div class="task-title"></div>
+        <div class="task-tags"></div>
+        <div class="task-desc"></div>
+        <div class="task-checklist"></div>
+        <div class="task-meta">
+          <button class="link checklist">Checklist +</button>
+          <button class="link edit">Edit</button>
+          <button class="link delete danger">Delete</button>
+        </div>
+      </div>
+    </template>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
