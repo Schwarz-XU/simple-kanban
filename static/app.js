@@ -261,6 +261,12 @@ function computePosition(dropzone, insertIndex){
 
 function setupDnD(){
   qsa('.dropzone').forEach((dz)=>{
+    dz.addEventListener('dragenter', (e)=>{
+      // Some browsers require dragenter to be cancelled to allow drop.
+      e.preventDefault();
+      if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    });
+
     dz.addEventListener('dragover', (e)=>{
       e.preventDefault();
       // Cross-browser hint.
@@ -268,6 +274,10 @@ function setupDnD(){
 
       const dragging = qs('.task.dragging');
       if(!dragging) return;
+
+      // Windows Chrome/Edge can be finicky if you move the *dragging element*
+      // across containers during dragover. Only reorder within the same column.
+      if(dragging.parentElement !== dz) return;
 
       const after = [...dz.querySelectorAll('.task:not(.dragging)')].find((t)=>{
         const r = t.getBoundingClientRect();
@@ -287,6 +297,7 @@ function setupDnD(){
       if(!el) return;
 
       // Ensure the element is in the dropzone we dropped onto.
+      // (Do this only on drop to maximize cross-browser compatibility.)
       if(el.parentElement !== dz){ dz.appendChild(el); }
 
       const status = dz.dataset.status;
