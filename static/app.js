@@ -107,6 +107,10 @@ async function loadBoards(){
 
   let bid = getBoardId();
   if(!bid && boards.length){ bid = boards[0].id; }
+  // If stored board id no longer exists, fall back.
+  if(bid && !boards.some(b => b.id === bid)){
+    bid = boards.length ? boards[0].id : null;
+  }
   if(bid){
     sel.value = String(bid);
     setBoardId(bid);
@@ -118,6 +122,13 @@ async function loadBoards(){
     await refresh();
     toast('Switched board');
   });
+
+  // Enable/disable delete button depending on how many boards exist.
+  const delBtn = qs('#btnDeleteBoard');
+  if(delBtn){
+    delBtn.disabled = boards.length <= 1;
+    delBtn.title = delBtn.disabled ? 'Cannot delete the last board' : '';
+  }
 }
 
 function renderTags(container, tags){
@@ -384,6 +395,26 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   qs('#btnAdd').addEventListener('click', addTask);
   qs('#btnRefresh').addEventListener('click', refresh);
   qs('#btnNewBoard').addEventListener('click', newBoard);
+
+  qs('#btnDeleteBoard').addEventListener('click', async ()=>{
+    const bid = getBoardId();
+    const sel = qs('#boardSelect');
+    const name = sel?.selectedOptions?.[0]?.textContent || 'this board';
+    if(!bid){ toast('No board selected'); return; }
+
+    if(!confirm(`Delete board "${name}" and ALL its tasks? This cannot be undone.`)) return;
+    const typed = prompt('Type DELETE to confirm');
+    if(typed !== 'DELETE'){
+      toast('Cancelled');
+      return;
+    }
+
+    await api(`/api/boards/${bid}`, { method: 'DELETE' });
+    // Reload boards + refresh UI
+    await loadBoards();
+    await refresh();
+    toast('Board deleted');
+  });
 
   // status filter chips
   qsa('[data-status-filter]').forEach((btn)=>{

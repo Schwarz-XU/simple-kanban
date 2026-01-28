@@ -292,6 +292,38 @@ def api_create_board():
     return jsonify({"board": dict(row)}), 201
 
 
+@app.delete("/api/boards/<int:board_id>")
+def api_delete_board(board_id: int):
+    """Hard delete a board and all its tasks.
+
+    Note: tasks.board_id doesn't use ON DELETE CASCADE in older DBs, so we
+    delete tasks explicitly.
+    """
+    with db() as con:
+        default_board_id = ensure_default_board(con)
+        # Don't allow deleting the last remaining board.
+        cnt = con.execute("SELECT COUNT(*) AS c FROM boards").fetchone()["c"]
+        if int(cnt) <= 1:
+            return jsonify({"error": "cannot delete the last remaining board"}), 400
+
+        row = con.execute("SELECT id, name FROM boards WHERE id=?", (board_id,)).fetchone()
+        if not row:
+            return jsonify({"error": "board not found"}), 404
+
+        # Prevent deleting the implicit default board id when it's the only one (handled above),
+        # but allow deleting it if others exist.
+        con.execute("DELETE FROM tasks WHERE board_id=?", (board_id,))
+        cur = con.execute("DELETE FROM boards WHERE id=?", (board_id,))
+        if cur.rowcount == 0:
+            return jsonify({"error": "board not found"}), 404
+
+        # Ensure there's still a default board and tasks don't point to null.
+        _ = ensure_default_board(con)
+        con.execute("UPDATE tasks SET board_id=? WHERE board_id IS NULL", (default_board_id,))
+
+    return jsonify({"ok": True, "deleted": {"id": int(row["id"]), "name": str(row["name"])}})
+
+
 @app.get("/api/tasks")
 def api_list_tasks():
     with db() as con:
