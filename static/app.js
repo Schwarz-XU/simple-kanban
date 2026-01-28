@@ -191,6 +191,8 @@ function taskEl(task){
 
   el.addEventListener('dragstart', (e)=>{
     el.classList.add('dragging');
+    // Cross-browser: explicitly mark as a move operation.
+    e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', String(task.id));
   });
   el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
@@ -261,6 +263,9 @@ function setupDnD(){
   qsa('.dropzone').forEach((dz)=>{
     dz.addEventListener('dragover', (e)=>{
       e.preventDefault();
+      // Cross-browser hint.
+      if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+
       const dragging = qs('.task.dragging');
       if(!dragging) return;
 
@@ -275,8 +280,14 @@ function setupDnD(){
     dz.addEventListener('drop', async (e)=>{
       e.preventDefault();
       const id = e.dataTransfer.getData('text/plain');
-      const el = dz.querySelector(`.task[data-id="${id}"]`);
+
+      // When dragging across columns, some browsers won't reliably keep the
+      // element inside the target dropzone during drag. Find it globally.
+      const el = qs(`.task[data-id="${id}"]`);
       if(!el) return;
+
+      // Ensure the element is in the dropzone we dropped onto.
+      if(el.parentElement !== dz){ dz.appendChild(el); }
 
       const status = dz.dataset.status;
       const items = qsa('.task', dz);
