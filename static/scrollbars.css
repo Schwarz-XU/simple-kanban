@@ -1,0 +1,16 @@
+/* Shared scrollbar styling for terminal theme (WebKit/Blink + Firefox)
+   Apply by adding the class .scroll-terminal to any scrollable element.
+*/
+.scroll-terminal::-webkit-scrollbar { width: 10px; height: 10px; }
+.scroll-terminal::-webkit-scrollbar-track { background: #000; }
+.scroll-terminal::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 102, 0.25);
+  border: 1px solid rgba(0, 255, 102, 0.35);
+  border-radius: 10px;
+}
+.scroll-terminal::-webkit-scrollbar-thumb:hover { background: rgba(0, 255, 102, 0.35); }
+
+.scroll-terminal {
+  scrollbar-color: rgba(0, 255, 102, 0.35) #000;
+  scrollbar-width: thin;
+}

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Kanban Bob</title>
     <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/scrollbars.css" />
   </head>
   <body>
     <header class="topbar">
@@ -46,7 +47,7 @@
           <div class="column-title">{{ c|capitalize }}</div>
           <div class="column-count" id="count-{{ c }}">0</div>
         </div>
-        <div class="dropzone" data-status="{{ c }}"></div>
+        <div class="dropzone scroll-terminal" data-status="{{ c }}"></div>
       </section>
       {% endfor %}
     </main>
@@ -74,7 +75,7 @@
           <button id="btnConsoleClear" class="chip" type="button">Clear</button>
         </div>
       </div>
-      <pre id="activityLog" class="activity-log"></pre>
+      <pre id="activityLog" class="activity-log scroll-terminal"></pre>
     </section>
 
     <script src="/static/app.js"></script>
