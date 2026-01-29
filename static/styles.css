@@ -285,7 +285,7 @@ select:focus { outline: none; box-shadow: 0 0 0 2px rgba(0,255,102,.18); }
 .activity-log {
   margin: 0;
   padding: 10px 14px 14px;
-  height: 16.66vh; /* console takes ~1/6 of the screen */
+  height: 12.5vh; /* console takes ~1/8 of the screen */
   max-height: 320px;
   min-height: 160px;
   overflow: auto; /* only console scrolls */
