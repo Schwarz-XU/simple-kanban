@@ -136,6 +136,7 @@ button:hover { filter: brightness(1.10); }
   flex: 1;
   min-height: 240px;
   overflow: auto; /* each column scrolls */
+  overscroll-behavior: contain; /* prevent scroll chaining to other areas */
 }
 
 .task {
