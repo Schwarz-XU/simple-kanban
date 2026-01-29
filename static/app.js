@@ -242,8 +242,8 @@ function renderChecklist(container, items){
     row.appendChild(text);
     container.appendChild(row);
 
-    // Toggle on clicking either the [ ]/[x] or the text
-    const toggle = async ()=>{
+    // Click: toggle done
+    const toggleDone = async ()=>{
       await api(`/api/checklist/${it.id}`, {
         method: 'PATCH',
         body: JSON.stringify({ done: !it.done })
@@ -251,8 +251,30 @@ function renderChecklist(container, items){
       await refresh();
     };
 
-    box.addEventListener('click', toggle);
-    text.addEventListener('click', toggle);
+    // Double-click text: edit item text (save-on-blur)
+    text.addEventListener('dblclick', ()=>{
+      startInlineInput(text, it.text, {
+        onSave: async (next)=>{
+          const t = (next || '').trim();
+          if(!t) return;
+          await api(`/api/checklist/${it.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ text: t })
+          });
+          await refresh();
+          toast('Checklist item updated');
+        }
+      });
+    });
+
+    box.addEventListener('click', toggleDone);
+    text.addEventListener('click', (e)=>{
+      // Avoid toggling when finishing an edit.
+      if(e.target?.classList?.contains('inline-edit')) return;
+      // Single click toggles; double click edits.
+      if(e.detail === 2) return;
+      toggleDone();
+    });
   });
 
   if(list.length > shown.length){
@@ -264,16 +286,112 @@ function renderChecklist(container, items){
   }
 }
 
+function startInlineInput(spanEl, initialValue, { multiline=false, placeholder='', onSave }={}){
+  const parent = spanEl.parentElement;
+  if(!parent) return;
+
+  // Avoid nesting edits.
+  if(parent.querySelector('.inline-edit')) return;
+
+  const input = document.createElement(multiline ? 'textarea' : 'input');
+  input.className = 'inline-edit';
+  input.value = initialValue ?? '';
+  if(placeholder) input.placeholder = placeholder;
+  if(multiline){
+    input.rows = Math.max(2, Math.min(6, (String(input.value).split('\n').length || 2)));
+  }
+
+  const finish = async (commit)=>{
+    input.removeEventListener('blur', onBlur);
+    input.removeEventListener('keydown', onKey);
+
+    if(!commit){
+      parent.replaceChild(spanEl, input);
+      return;
+    }
+
+    const next = input.value;
+    parent.replaceChild(spanEl, input);
+    if(typeof onSave === 'function'){
+      await onSave(next);
+    }
+  };
+
+  const onBlur = ()=>{ finish(true).catch((e)=>{ console.error(e); toast(e.message); }); };
+  const onKey = (e)=>{
+    if(e.key === 'Escape'){
+      e.preventDefault();
+      finish(false);
+    }
+    if(!multiline && e.key === 'Enter'){
+      e.preventDefault();
+      finish(true).catch((err)=>{ console.error(err); toast(err.message); });
+    }
+    if(multiline && e.key === 'Enter' && (e.ctrlKey || e.metaKey)){
+      e.preventDefault();
+      finish(true).catch((err)=>{ console.error(err); toast(err.message); });
+    }
+  };
+
+  parent.replaceChild(input, spanEl);
+  input.addEventListener('blur', onBlur);
+  input.addEventListener('keydown', onKey);
+  input.focus();
+  input.select();
+}
+
 function taskEl(task){
   const tpl = qs('#taskTemplate');
   const el = tpl.content.firstElementChild.cloneNode(true);
   el.dataset.id = task.id;
   el.dataset.status = task.status;
   el.dataset.position = task.position;
-  qs('.task-title', el).textContent = task.title;
-  renderTags(qs('.task-tags', el), task.tags || []);
-  qs('.task-desc', el).textContent = task.description || '';
+
+  const titleEl = qs('.task-title', el);
+  titleEl.textContent = task.title;
+
+  const tagsEl = qs('.task-tags', el);
+  renderTags(tagsEl, task.tags || []);
+
+  const descEl = qs('.task-desc', el);
+  descEl.textContent = task.description || '';
+
   renderChecklist(qs('.task-checklist', el), task.checklist || []);
+
+  // Inline editing (double-click)
+  titleEl.addEventListener('dblclick', ()=>{
+    startInlineInput(titleEl, task.title, {
+      onSave: async (next)=>{
+        const t = (next || '').trim();
+        if(!t) return;
+        await api(`/api/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ title: t }) });
+        await refresh();
+        toast('Title updated');
+      }
+    });
+  });
+
+  descEl.addEventListener('dblclick', ()=>{
+    startInlineInput(descEl, task.description || '', {
+      multiline: true,
+      placeholder: 'Description…',
+      onSave: async (next)=>{
+        await api(`/api/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ description: next ?? '' }) });
+        await refresh();
+        toast('Description updated');
+      }
+    });
+  });
+
+  tagsEl.addEventListener('dblclick', async ()=>{
+    const existing = (task.tags || []).map(t => t.name).join(', ');
+    const tagsRaw = prompt('Tags (comma separated)', existing);
+    if(tagsRaw === null) return;
+    const tags = tagsRaw.split(',').map(s => s.trim()).filter(Boolean);
+    await api(`/api/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ tags }) });
+    await refresh();
+    toast('Tags updated');
+  });
 
   el.addEventListener('dragstart', (e)=>{
     el.classList.add('dragging');
