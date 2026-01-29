@@ -56,6 +56,23 @@ systemctl --user enable --now kanban.service
 systemctl --user status kanban.service
 ```
 
+### Updating
+
+From inside WSL/Linux:
+
+```bash
+cd ~/projects/simple-kanban
+git pull
+~/.local/bin/uv sync
+systemctl --user restart kanban.service
+```
+
+Or use the helper script:
+
+```bash
+./scripts/update.sh
+```
+
 ### 3) Logs
 
 ```bash
