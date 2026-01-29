@@ -1,6 +1,65 @@
 const COLUMNS = ['backlog', 'todo', 'doing', 'done'];
 
 const FILTERS_KEY = 'kanban.filters.v1';
+const ACTIVITY_KEY = 'kanban.activity.v1';
+const ACTIVITY_MAX = 200;
+
+function nowStamp(){
+  const d = new Date();
+  const pad = (n)=> String(n).padStart(2,'0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function loadActivity(){
+  const raw = localStorage.getItem(ACTIVITY_KEY);
+  if(!raw) return [];
+  try {
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.slice(-ACTIVITY_MAX) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveActivity(lines){
+  localStorage.setItem(ACTIVITY_KEY, JSON.stringify(lines.slice(-ACTIVITY_MAX)));
+}
+
+let ACTIVITY = loadActivity();
+
+function formatAny(x){
+  if(x === undefined) return '';
+  if(x === null) return 'null';
+  if(typeof x === 'string') return x;
+  try { return JSON.stringify(x); } catch { return String(x); }
+}
+
+function addLog(level, ...parts){
+  const line = `[${nowStamp()}] ${level.toUpperCase()}: ` + parts.map(formatAny).filter(Boolean).join(' ');
+  ACTIVITY.push(line);
+  if(ACTIVITY.length > ACTIVITY_MAX) ACTIVITY = ACTIVITY.slice(-ACTIVITY_MAX);
+  saveActivity(ACTIVITY);
+  renderActivity();
+}
+
+function renderActivity(){
+  const el = qs('#activityLog');
+  if(!el) return;
+  el.textContent = ACTIVITY.join('\n');
+  // auto-scroll to bottom
+  el.scrollTop = el.scrollHeight;
+}
+
+function hookConsole(){
+  const orig = {
+    log: console.log.bind(console),
+    warn: console.warn.bind(console),
+    error: console.error.bind(console),
+  };
+  console.log = (...args)=>{ orig.log(...args); addLog('log', ...args); };
+  console.warn = (...args)=>{ orig.warn(...args); addLog('warn', ...args); };
+  console.error = (...args)=>{ orig.error(...args); addLog('error', ...args); };
+}
 
 function loadFilters(){
   const raw = localStorage.getItem(FILTERS_KEY);
@@ -38,15 +97,21 @@ function toast(msg){
   t.hidden = false;
   clearTimeout(window.__toastTimer);
   window.__toastTimer = setTimeout(()=>{ t.hidden = true; }, 2200);
+  addLog('ui', msg);
 }
 
 async function api(path, opts={}){
+  const method = (opts.method || 'GET').toUpperCase();
+  addLog('net', `${method} ${path}`);
   const res = await fetch(path, {
     headers: { 'Content-Type': 'application/json' },
     ...opts,
   });
   const data = await res.json().catch(()=> ({}));
-  if(!res.ok){ throw new Error(data.error || `HTTP ${res.status}`); }
+  if(!res.ok){
+    addLog('error', `${method} ${path} -> HTTP ${res.status}`, data.error || data);
+    throw new Error(data.error || `HTTP ${res.status}`);
+  }
   return data;
 }
 
@@ -396,6 +461,16 @@ async function newBoard(){
 }
 
 window.addEventListener('DOMContentLoaded', async ()=>{
+  // Activity console
+  hookConsole();
+  renderActivity();
+  qs('#btnConsoleClear').addEventListener('click', ()=>{
+    ACTIVITY = [];
+    saveActivity(ACTIVITY);
+    renderActivity();
+    toast('Console cleared');
+  });
+
   setupDnD();
   qs('#btnAdd').addEventListener('click', addTask);
   qs('#btnRefresh').addEventListener('click', refresh);
