@@ -1,13 +1,14 @@
 * { box-sizing: border-box; }
 :root {
-  --bg: #0b0f17;
-  --panel: #111827;
-  --panel2: #0f172a;
-  --text: #e5e7eb;
-  --muted: #94a3b8;
-  --border: #23314e;
-  --accent: #60a5fa;
-  --danger: #ef4444;
+  /* Terminal-ish theme */
+  --bg: #000000;
+  --panel: #020602;
+  --panel2: #030803;
+  --text: #00ff66;
+  --muted: rgba(0, 255, 102, 0.70);
+  --border: rgba(0, 255, 102, 0.18);
+  --accent: #00ff66;
+  --danger: #ff3b30;
 }
 
 html, body {
@@ -33,7 +34,7 @@ body {
   gap: 16px;
   padding: 16px 18px;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, #0b0f17 0%, #0a1020 100%);
+  background: linear-gradient(180deg, #000 0%, #020802 100%);
   position: sticky;
   top: 0;
 }
@@ -86,14 +87,14 @@ h1 {
 
 button {
   border: 1px solid var(--border);
-  background: var(--panel);
+  background: rgba(0, 255, 102, 0.06);
   color: var(--text);
   padding: 8px 10px;
   border-radius: 10px;
   cursor: pointer;
 }
-button.primary { border-color: rgba(96,165,250,.55); background: rgba(96,165,250,.16); }
-button:hover { filter: brightness(1.06); }
+button.primary { border-color: rgba(0, 255, 102, 0.55); background: rgba(0, 255, 102, 0.14); }
+button:hover { filter: brightness(1.10); }
 
 .board {
   display: grid;
@@ -136,8 +137,8 @@ button:hover { filter: brightness(1.06); }
 }
 
 .task {
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(17,24,39,.7);
+  border: 1px solid rgba(0,255,102,.18);
+  background: rgba(0,255,102,.04);
   border-radius: 12px;
   padding: 10px;
 }
