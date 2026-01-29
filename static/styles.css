@@ -13,9 +13,17 @@
 html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
   background: var(--bg);
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden; /* keep the whole screen non-scrollable */
 }
 
 .topbar {
@@ -92,6 +100,8 @@ button:hover { filter: brightness(1.06); }
   grid-template-columns: repeat(4, minmax(240px, 1fr));
   gap: 12px;
   padding: 14px;
+  flex: 1;
+  overflow: hidden;
 }
 
 .column {
@@ -217,6 +227,7 @@ button.link.danger { color: var(--danger); }
   padding: 0;
   border-top: 1px solid rgba(255,255,255,.08);
   background: #030603;
+  flex: 0 0 auto;
 }
 .activity-header {
   display: flex;
@@ -235,8 +246,8 @@ button.link.danger { color: var(--danger); }
 .activity-log {
   margin: 0;
   padding: 10px 14px 14px;
-  max-height: 240px;
-  overflow: auto;
+  height: 240px; /* fixed console area */
+  overflow: auto; /* only console scrolls */
   color: #00ff66;
   background: #000;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -244,6 +255,28 @@ button.link.danger { color: var(--danger); }
   line-height: 1.35;
   white-space: pre-wrap;
   border-top: 1px solid rgba(0,255,102,.18);
+}
+
+/* Console scrollbar styling (WebKit/Blink: Chrome/Edge/Safari) */
+.activity-log::-webkit-scrollbar {
+  width: 10px;
+}
+.activity-log::-webkit-scrollbar-track {
+  background: #000;
+}
+.activity-log::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 102, 0.25);
+  border: 1px solid rgba(0, 255, 102, 0.35);
+  border-radius: 10px;
+}
+.activity-log::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 102, 0.35);
+}
+
+/* Firefox */
+.activity-log {
+  scrollbar-color: rgba(0, 255, 102, 0.35) #000;
+  scrollbar-width: thin;
 }
 
 @media (max-width: 880px) {
