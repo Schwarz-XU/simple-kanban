@@ -44,6 +44,17 @@ def ensure_default_board(con: sqlite3.Connection) -> int:
     return int(cur.lastrowid)
 
 
+def prune_unused_tags(con: sqlite3.Connection) -> int:
+    """Delete tags that are not referenced by any task.
+
+    Returns number of deleted rows.
+    """
+    cur = con.execute(
+        "DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM task_tags)"
+    )
+    return int(cur.rowcount)
+
+
 def init_db() -> None:
     with db() as con:
         # Boards
@@ -130,6 +141,8 @@ def init_db() -> None:
         con.execute("CREATE INDEX IF NOT EXISTS idx_task_tags_tag ON task_tags(tag_id)")
 
         con.execute("CREATE INDEX IF NOT EXISTS idx_checklist_task_pos ON checklist_items(task_id, position)")
+        # best-effort cleanup: remove tags no longer in use
+        prune_unused_tags(con)
         con.execute("CREATE INDEX IF NOT EXISTS idx_checklist_task_done ON checklist_items(task_id, done)")
 
 

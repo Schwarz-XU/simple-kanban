@@ -124,9 +124,22 @@ function setBoardId(id){
   localStorage.setItem('kanban.boardId', String(id));
 }
 
+function reconcileSelectedTags(availableTags){
+  const available = new Set((availableTags || []).map(t => t.name));
+  const before = FILTERS.tags || [];
+  const after = before.filter(t => available.has(t));
+  if(after.length !== before.length){
+    FILTERS.tags = after;
+    saveFilters(FILTERS);
+    addLog('ui', `Pruned stale tag filters: ${before.filter(t=>!available.has(t)).join(', ')}`);
+  }
+}
+
 async function loadTags(){
   const data = await api('/api/tags');
-  return data.tags || [];
+  const tags = data.tags || [];
+  reconcileSelectedTags(tags);
+  return tags;
 }
 
 function closeTagDropdown(){
