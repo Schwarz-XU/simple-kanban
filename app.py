@@ -11,7 +11,7 @@ APP_HOST = os.environ.get("KANBAN_HOST", "127.0.0.1")
 APP_PORT = int(os.environ.get("KANBAN_PORT", "5123"))
 DB_PATH = os.environ.get("KANBAN_DB", os.path.join(os.path.dirname(__file__), "kanban.db"))
 
-COLUMNS = ["todo", "doing", "done"]
+COLUMNS = ["backlog", "todo", "doing", "done"]
 DEFAULT_BOARD_NAME = "Main"
 
 app = Flask(__name__)

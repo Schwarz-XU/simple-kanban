@@ -1,20 +1,25 @@
-const COLUMNS = ['todo', 'doing', 'done'];
+const COLUMNS = ['backlog', 'todo', 'doing', 'done'];
 
 const FILTERS_KEY = 'kanban.filters.v1';
 
 function loadFilters(){
   const raw = localStorage.getItem(FILTERS_KEY);
   if(!raw){
-    return { statuses: {todo:true, doing:true, done:true}, tags: [] };
+    return { statuses: {backlog:true, todo:true, doing:true, done:true}, tags: [] };
   }
   try {
     const f = JSON.parse(raw);
     return {
-      statuses: { todo: !!f?.statuses?.todo, doing: !!f?.statuses?.doing, done: !!f?.statuses?.done },
+      statuses: {
+        backlog: !!f?.statuses?.backlog,
+        todo: !!f?.statuses?.todo,
+        doing: !!f?.statuses?.doing,
+        done: !!f?.statuses?.done,
+      },
       tags: Array.isArray(f?.tags) ? f.tags : []
     };
   } catch {
-    return { statuses: {todo:true, doing:true, done:true}, tags: [] };
+    return { statuses: {backlog:true, todo:true, doing:true, done:true}, tags: [] };
   }
 }
 
@@ -422,7 +427,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
       const st = btn.dataset.statusFilter;
       FILTERS.statuses[st] = !FILTERS.statuses[st];
       // prevent turning off all columns
-      if(!FILTERS.statuses.todo && !FILTERS.statuses.doing && !FILTERS.statuses.done){
+      if(!FILTERS.statuses.backlog && !FILTERS.statuses.todo && !FILTERS.statuses.doing && !FILTERS.statuses.done){
         FILTERS.statuses[st] = true;
       }
       saveFilters(FILTERS);
@@ -431,7 +436,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   });
 
   qs('#btnClearFilters').addEventListener('click', async ()=>{
-    FILTERS = { statuses: {todo:true, doing:true, done:true}, tags: [] };
+    FILTERS = { statuses: {backlog:true, todo:true, doing:true, done:true}, tags: [] };
     saveFilters(FILTERS);
     closeTagDropdown();
     await refresh();
