@@ -246,7 +246,9 @@ button.link.danger { color: var(--danger); }
 .activity-log {
   margin: 0;
   padding: 10px 14px 14px;
-  height: 240px; /* fixed console area */
+  height: 25vh; /* console takes ~1/4 of the screen */
+  max-height: 320px;
+  min-height: 160px;
   overflow: auto; /* only console scrolls */
   color: #00ff66;
   background: #000;
