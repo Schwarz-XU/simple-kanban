@@ -452,8 +452,21 @@ def api_update_task(task_id: int):
 
 @app.get("/api/tags")
 def api_list_tags():
+    """List tags currently in use.
+
+    A tag is considered "existing" if it is assigned to at least one task.
+    """
     with db() as con:
-        rows = con.execute("SELECT id, name, color, created_at, updated_at FROM tags ORDER BY name").fetchall()
+        rows = con.execute(
+            """
+            SELECT t.id, t.name, t.color, t.created_at, t.updated_at, COUNT(tt.task_id) AS usage
+            FROM tags t
+            JOIN task_tags tt ON tt.tag_id = t.id
+            GROUP BY t.id
+            HAVING usage > 0
+            ORDER BY t.name
+            """
+        ).fetchall()
     return jsonify({"tags": [dict(r) for r in rows]})
 
 
