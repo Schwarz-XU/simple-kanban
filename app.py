@@ -468,19 +468,29 @@ def api_list_tags():
     """List tags currently in use.
 
     A tag is considered "existing" if it is assigned to at least one task.
+
+    If `board_id` is provided, only tags used by tasks on that board are returned.
     """
     with db() as con:
+        default_board_id = ensure_default_board(con)
+        bid = board_id_from_request(default_board_id)
+        if bid is None:
+            return jsonify({"error": "invalid board_id"}), 400
+
         rows = con.execute(
             """
-            SELECT t.id, t.name, t.color, t.created_at, t.updated_at, COUNT(tt.task_id) AS usage
-            FROM tags t
-            JOIN task_tags tt ON tt.tag_id = t.id
-            GROUP BY t.id
+            SELECT g.id, g.name, g.color, g.created_at, g.updated_at, COUNT(tt.task_id) AS usage
+            FROM tags g
+            JOIN task_tags tt ON tt.tag_id = g.id
+            JOIN tasks t ON t.id = tt.task_id
+            WHERE t.board_id = ?
+            GROUP BY g.id
             HAVING usage > 0
-            ORDER BY t.name
-            """
+            ORDER BY g.name
+            """,
+            (bid,),
         ).fetchall()
-    return jsonify({"tags": [dict(r) for r in rows]})
+    return jsonify({"tags": [dict(r) for r in rows], "board_id": bid})
 
 
 @app.get("/api/tasks/<int:task_id>/checklist")

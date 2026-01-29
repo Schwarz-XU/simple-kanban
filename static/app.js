@@ -136,7 +136,9 @@ function reconcileSelectedTags(availableTags){
 }
 
 async function loadTags(){
-  const data = await api('/api/tags');
+  const bid = getBoardId();
+  const q = bid ? `?board_id=${encodeURIComponent(String(bid))}` : '';
+  const data = await api(`/api/tags${q}`);
   const tags = data.tags || [];
   reconcileSelectedTags(tags);
   return tags;
