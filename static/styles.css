@@ -147,7 +147,7 @@ button:hover { filter: brightness(1.10); }
 }
 .task.dragging { opacity: 0.55; }
 
-.task-title { font-weight: 650; margin-bottom: 6px; }
+.task-title { font-weight: 650; margin-bottom: 6px; cursor: text; }
 
 .task-tags {
   display: flex;
@@ -174,7 +174,7 @@ button:hover { filter: brightness(1.10); }
   box-shadow: 0 0 0 1px rgba(0,0,0,.3) inset;
 }
 
-.task-desc { color: var(--muted); font-size: 12px; white-space: pre-wrap; }
+.task-desc { color: var(--muted); font-size: 12px; white-space: pre-wrap; cursor: text; }
 
 .task-checklist {
   margin-top: 8px;
@@ -230,6 +230,18 @@ select {
   border-radius: 10px;
 }
 select:focus { outline: none; box-shadow: 0 0 0 2px rgba(0,255,102,.18); }
+
+.inline-edit {
+  width: 100%;
+  border: 1px solid rgba(0,255,102,.25);
+  background: #000;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+}
+.inline-edit:focus { outline: none; box-shadow: 0 0 0 2px rgba(0,255,102,.18); }
 
 .toast {
   position: fixed;
