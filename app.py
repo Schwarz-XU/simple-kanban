@@ -44,6 +44,17 @@ def ensure_default_board(con: sqlite3.Connection) -> int:
     return int(cur.lastrowid)
 
 
+def prune_unused_tags(con: sqlite3.Connection) -> int:
+    """Delete tags that are not referenced by any task.
+
+    Returns number of deleted rows.
+    """
+    cur = con.execute(
+        "DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM task_tags)"
+    )
+    return int(cur.rowcount)
+
+
 def init_db() -> None:
     with db() as con:
         # Boards
@@ -130,6 +141,8 @@ def init_db() -> None:
         con.execute("CREATE INDEX IF NOT EXISTS idx_task_tags_tag ON task_tags(tag_id)")
 
         con.execute("CREATE INDEX IF NOT EXISTS idx_checklist_task_pos ON checklist_items(task_id, position)")
+        # best-effort cleanup: remove tags no longer in use
+        prune_unused_tags(con)
         con.execute("CREATE INDEX IF NOT EXISTS idx_checklist_task_done ON checklist_items(task_id, done)")
 
 
@@ -452,9 +465,32 @@ def api_update_task(task_id: int):
 
 @app.get("/api/tags")
 def api_list_tags():
+    """List tags currently in use.
+
+    A tag is considered "existing" if it is assigned to at least one task.
+
+    If `board_id` is provided, only tags used by tasks on that board are returned.
+    """
     with db() as con:
-        rows = con.execute("SELECT id, name, color, created_at, updated_at FROM tags ORDER BY name").fetchall()
-    return jsonify({"tags": [dict(r) for r in rows]})
+        default_board_id = ensure_default_board(con)
+        bid = board_id_from_request(default_board_id)
+        if bid is None:
+            return jsonify({"error": "invalid board_id"}), 400
+
+        rows = con.execute(
+            """
+            SELECT g.id, g.name, g.color, g.created_at, g.updated_at, COUNT(tt.task_id) AS usage
+            FROM tags g
+            JOIN task_tags tt ON tt.tag_id = g.id
+            JOIN tasks t ON t.id = tt.task_id
+            WHERE t.board_id = ?
+            GROUP BY g.id
+            HAVING usage > 0
+            ORDER BY g.name
+            """,
+            (bid,),
+        ).fetchall()
+    return jsonify({"tags": [dict(r) for r in rows], "board_id": bid})
 
 
 @app.get("/api/tasks/<int:task_id>/checklist")

@@ -124,9 +124,24 @@ function setBoardId(id){
   localStorage.setItem('kanban.boardId', String(id));
 }
 
+function reconcileSelectedTags(availableTags){
+  const available = new Set((availableTags || []).map(t => t.name));
+  const before = FILTERS.tags || [];
+  const after = before.filter(t => available.has(t));
+  if(after.length !== before.length){
+    FILTERS.tags = after;
+    saveFilters(FILTERS);
+    addLog('ui', `Pruned stale tag filters: ${before.filter(t=>!available.has(t)).join(', ')}`);
+  }
+}
+
 async function loadTags(){
-  const data = await api('/api/tags');
-  return data.tags || [];
+  const bid = getBoardId();
+  const q = bid ? `?board_id=${encodeURIComponent(String(bid))}` : '';
+  const data = await api(`/api/tags${q}`);
+  const tags = data.tags || [];
+  reconcileSelectedTags(tags);
+  return tags;
 }
 
 function closeTagDropdown(){
@@ -201,19 +216,44 @@ async function loadBoards(){
   }
 }
 
+function toggleTagFilter(tagName){
+  const set = new Set(FILTERS.tags || []);
+  if(set.has(tagName)) set.delete(tagName);
+  else set.add(tagName);
+  FILTERS.tags = [...set];
+  saveFilters(FILTERS);
+}
+
 function renderTags(container, tags){
   container.innerHTML = '';
   (tags || []).forEach((t)=>{
     const pill = document.createElement('span');
     pill.className = 'tag-pill';
+    pill.title = 'Click to filter';
+
+    // Show selected state
+    if(FILTERS.tags?.includes(t.name)){
+      pill.classList.add('active');
+    }
+
     const dot = document.createElement('span');
     dot.className = 'tag-dot';
     if(t.color){ dot.style.background = t.color; }
+
     const name = document.createElement('span');
     name.textContent = t.name;
+
     pill.appendChild(dot);
     pill.appendChild(name);
     container.appendChild(pill);
+
+    pill.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      toggleTagFilter(t.name);
+      applyFiltersToUI();
+      await refresh();
+      toast(`Filter: ${FILTERS.tags.length ? FILTERS.tags.join(', ') : 'none'}`);
+    });
   });
 }
 
