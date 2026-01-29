@@ -225,29 +225,34 @@ function renderChecklist(container, items){
   // Keep it compact on cards: show up to 6 items.
   const shown = list.slice(0, 6);
   shown.forEach((it)=>{
-    const row = document.createElement('label');
+    const row = document.createElement('div');
     row.className = 'check-item';
 
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = !!it.done;
-    cb.dataset.itemId = String(it.id);
+    const box = document.createElement('button');
+    box.type = 'button';
+    box.className = 'check-box';
+    box.textContent = it.done ? '[x]' : '[ ]';
+    box.setAttribute('aria-label', it.done ? 'Mark unchecked' : 'Mark checked');
 
     const text = document.createElement('span');
     text.className = 'check-text' + (it.done ? ' done' : '');
     text.textContent = it.text;
 
-    row.appendChild(cb);
+    row.appendChild(box);
     row.appendChild(text);
     container.appendChild(row);
 
-    cb.addEventListener('change', async ()=>{
+    // Toggle on clicking either the [ ]/[x] or the text
+    const toggle = async ()=>{
       await api(`/api/checklist/${it.id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ done: cb.checked })
+        body: JSON.stringify({ done: !it.done })
       });
       await refresh();
-    });
+    };
+
+    box.addEventListener('click', toggle);
+    text.addEventListener('click', toggle);
   });
 
   if(list.length > shown.length){
