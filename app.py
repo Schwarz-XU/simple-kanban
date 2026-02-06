@@ -588,4 +588,4 @@ def api_delete_task(task_id: int):
 
 if __name__ == "__main__":
     init_db()
-    app.run(host=APP_HOST, port=APP_PORT, debug=True)
+    app.run(host=APP_HOST, port=APP_PORT, debug=False)
