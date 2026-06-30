@@ -308,13 +308,6 @@ function renderChecklist(container, items){
     });
 
     box.addEventListener('click', toggleDone);
-    text.addEventListener('click', (e)=>{
-      // Avoid toggling when finishing an edit.
-      if(e.target?.classList?.contains('inline-edit')) return;
-      // Single click toggles; double click edits.
-      if(e.detail === 2) return;
-      toggleDone();
-    });
   });
 
   if(list.length > shown.length){
